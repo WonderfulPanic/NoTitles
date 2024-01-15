@@ -19,7 +19,7 @@ apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'eclipse'
 version='1.0'
 group='wonderfulpanic.notitles'
-archivesBaseName='notitles'
+archivesBaseName='NoTitles'
 // Need this here so eclipse task generates correctly.
 sourceCompatibility='1.8'
 targetCompatibility='1.8'
