@@ -1,0 +1,12 @@
+[
+	{
+		"modid": "notitles",
+		"name": "NoTitles",
+		"description": "Prevents titles from jumping out in your face",
+		"version": "${version}",
+		"mcversion": "${mcversion}",
+		"url": "",
+		"updateUrl": "",
+		"authorList": ["WonderfulPanic"]
+	}
+]

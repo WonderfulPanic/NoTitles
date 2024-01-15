@@ -1,0 +1,11 @@
+{
+    "minVersion": "0.7.5",//"0.8.3",
+    "compatibilityLevel": "JAVA_8",
+    "package": "wonderfulpanic.notitles.mixins",
+    "refmap": "mixins.notitles.refmap.json",
+    "mixins": [
+        "MixinNetHandlerTitles"
+    ],
+    "client": [],
+    "server": []
+}
