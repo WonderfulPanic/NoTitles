@@ -22,7 +22,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.network.PacketThreadUtil;
 import net.minecraft.network.play.INetHandlerPlayClient;
@@ -40,8 +39,6 @@ public abstract class MixinNetHandlerTitles implements INetHandlerPlayClient{
 	private long lastSubtitleTime=System.currentTimeMillis();
 	@Shadow
 	private Minecraft gameController;
-	@Shadow
-	private WorldClient clientWorldController;
 	@Override
 	@Overwrite
 	public void handleTitle(SPacketTitle packet){
