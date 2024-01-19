@@ -1,111 +1,125 @@
 buildscript{
-	repositories{
-		maven{
-			url='https://maven.minecraftforge.net/'
-		}
-		maven{
-			url="https://repo.spongepowered.org/maven"
-		}
-		mavenCentral()
-	}
 	dependencies{
-		classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
-		classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+		classpath "org.spongepowered:mixingradle:0.7.+"
 	}
 }
-apply plugin: 'net.minecraftforge.gradle'
-// Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
-apply plugin: 'org.spongepowered.mixin'
-apply plugin: 'eclipse'
-version='1.0'
-group='wonderfulpanic.notitles'
-archivesBaseName='NoTitles'
-// Need this here so eclipse task generates correctly.
-sourceCompatibility='1.8'
-targetCompatibility='1.8'
-compileJava.sourceCompatibility='1.8'
-compileJava.targetCompatibility='1.8' 
+plugins{
+	id "eclipse"
+	id "idea"
+	id "maven-publish"
+	id "net.minecraftforge.gradle" version "[6.0.16,6.2)"
+	//id "org.spongepowered.mixin" version "[0.7-SNAPSHOT)"
+}
+apply plugin: "org.spongepowered.mixin"
+version=mod_version
+group=mod_group_id
+base{
+	archivesName=mod_name
+}
+java.toolchain.languageVersion=JavaLanguageVersion.of(8)
+print "Java: ${System.getProperty 'java.version'}, "
+print "JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), "
+println "Arch: ${System.getProperty 'os.arch'}"
 minecraft{
-	// The mappings can be changed at any time, and must be in the following format.
-	// snapshot_YYYYMMDD   Snapshot are built nightly.
-	// stable_#            Stables are built at the discretion of the MCP team.
-	// Use non-default mappings at your own risk. they may not always work.
-	// Simply re-run your setup task after changing the mappings to update your workspace.
-	//mappings channel: 'snapshot', version: '20171003-1.12'
-	mappings channel: 'snapshot', version: '20171003-1.12'
-	// makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
-	// accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+	mappings channel: mapping_channel,version: mapping_version
+	copyIdeResources=true
+}
+sourceSets.main.resources{
+	srcDir "src/generated/resources"
 }
 repositories{
+	// ForgeGradle automatically adds the Forge maven and Maven Central for you
 	maven{
-		url='https://repo.spongepowered.org/maven'
+		url="https://repo.spongepowered.org/maven"
 	}
+	// If you have mod jar dependencies in ./libs, you can declare them as a repository like so.
+	// See https://docs.gradle.org/current/userguide/declaring_repositories.html#sub:flat_dir_resolver
+	// flatDir {
+	//     dir "libs"
+	// }
 }
 configurations{
 	embed
-	compile.extendsFrom(embed)
 }
 dependencies{
-	// Specify the version of Minecraft to use, If this is any group other then 'net.minecraft' it is assumed
-	// that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
-	// The userdev artifact is a special name and will get all sorts of transformations applied to it.
-	minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
-	embed('org.spongepowered:mixin:0.8.3'){
-		exclude module: 'guava'
-		exclude module: 'commons-io'
-		exclude module: 'gson'
-	}
-	// You may put jars on which you depend on in ./libs or you may define them like so..
-	// compile "some.group:artifact:version:classifier"
-	// compile "some.group:artifact:version"
+	minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+	embed(compileOnly "org.spongepowered:mixin:${mixin_version}")
+	annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
+	// Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
+	// The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
+	// compileOnly fg.deobf("mezz.jei:jei-${mc_version}-common-api:${jei_version}")
+	// compileOnly fg.deobf("mezz.jei:jei-${mc_version}-forge-api:${jei_version}")
+	// runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}-forge:${jei_version}")
 	
-	// Real examples
-	// compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
-	// compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
+	// Example mod dependency using a mod jar from ./libs with a flat dir repository
+	// This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
+	// The group id is ignored when searching -- in this case, it is "blank"
+	// implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
 	
-	// The 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
-	// provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-	
-	// These dependencies get remapped to your current MCP mappings
-	// deobf 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-	
-	// For more info...
+	// For more info:
 	// http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
 	// http://www.gradle.org/docs/current/userguide/dependency_management.html
 }
 configurations.all{
 	resolutionStrategy{
-		cacheChangingModulesFor 0,'seconds'
+		cacheChangingModulesFor 0,"seconds"
+	}
+}
+// This block of code expands all declared replace properties in the specified resource targets.
+// A missing property will result in an error. Properties are expanded using ${} Groovy notation.
+// When "copyIdeResources" is enabled, this will also run before the game launches in IDE environments.
+// See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
+tasks.named("processResources",ProcessResources).configure{
+	var replaceProperties=[
+		minecraft_version: minecraft_version,
+		minecraft_version_range: minecraft_version_range,
+		forge_version: forge_version,
+		forge_version_range: forge_version_range,
+		loader_version_range: loader_version_range,
+		mod_id: mod_id,
+		mod_name: mod_name,
+		mod_license: mod_license,
+		mod_version: mod_version,
+		mod_authors: mod_authors,
+		mod_description: mod_description,
+	]
+	inputs.properties replaceProperties
+	filesMatching(["mcmod.info","pack.mcmeta"]){
+		expand replaceProperties+[project:project]
 	}
 }
 mixin{
-	add sourceSets.main,"mixins.notitles.refmap.json"
+	add sourceSets.main,"${mixin_refmap}"
+	config "${mixin_config}"
 }
-jar{
+tasks.named("jar",Jar).configure{
 	from{
 		configurations.embed.collect{
 			it.isDirectory()?it:zipTree(it)
 		}
-	}{
-		exclude "LICENSE.txt","META-INF/MANIFSET.MF","META-INF/maven/**","META-INF/*.RSA","META-INF/*.SF"
 	}
+	exclude "LICENSE.txt","META-INF/*.RSA","META-INF/*.SF"
 	manifest{
 		attributes([
-			"Specification-Title": "notitles",
-			"Specification-Vendor": "wonderfulpanic",
-			"Specification-Version": "1",
-			"Implementation-Title": project.name,
-			"Implementation-Version": project.version,
-			"Implementation-Title": project.name,
-			"Implementation-Version": "${version}",
-			"Implementation-Vendor": "wonderfulpanic",
-			"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-			"TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
-			"MixinConfigs": "mixins.notitles.json",
-			"FMLCorePlugin": "wonderfulpanic.notitles.CoreMod",
-			"FMLCorePluginContainsFMLMod": "true",
-			"ForceLoadAsMod": "true"
+			"Specification-Title"			: mod_id,
+			"Specification-Vendor"			: mod_authors,
+			"Specification-Version"			: "1",
+			"Implementation-Title"			: project.name,
+			"Implementation-Version"		: project.jar.archiveVersion,
+			"Implementation-Vendor"			: mod_authors,
+			"Implementation-Timestamp"		: new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+			"TweakClass"					: tweak_class,
+			"FMLCorePlugin"					: fml_core_plugin,
+			"FMLCorePluginContainsFMLMod"	: "true",
+			"ForceLoadAsMod"				: "true"
 		])
 	}
+	finalizedBy "reobfJar"
 }
-jar.finalizedBy('reobfJar') 
+// However if you are in a multi-project build, dev time needs unobfed jar files, so you can delay the obfuscation until publishing by doing:
+// tasks.named("publish").configure{
+//		dependsOn "reobfJar"
+// }
+tasks.withType(JavaCompile).configureEach{
+	options.encoding="UTF-8"
+}
